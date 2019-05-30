@@ -80,7 +80,6 @@ def generate_news_table(dataframe, max_rows=10):
             ),
             html.P(
                 id = "news_update",
-                children= "Last update : " + datetime.datetime.now().strftime("%H:%M:%S"),
                 style={"fontSize": "11", "marginTop": "4", "color": "#45df7e"},
             ),
         ],
@@ -1005,7 +1004,7 @@ app.layout = html.Div(
                 ),
                 html.Div([
                     html.P('Headlines',style={"fontSize":"13","color":"#45df7e"}),
-                    html.Div(update_news(),id="news")
+                    html.Div(id="news")
                     ],
                     style={
                         "height":"33%",
@@ -1721,9 +1720,13 @@ def update_time(n):
 
 
 @app.callback(Output("news_update", "children"), [Input("i_news", "n_intervals")])
-def update_news_div(n):
+def update_news_timestamp(n):
     return "Last update : " + datetime.datetime.now().strftime('%m/%d/%y %H:%M:%S')
 
+
+@app.callback(Output("news", "children"), [Input("i_news", "n_intervals")])
+def update_news_div(n):
+    return update_news()
 
 if __name__ == "__main__":
     app.run_server(debug=True, threaded=True)
