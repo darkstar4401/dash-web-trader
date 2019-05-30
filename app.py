@@ -79,7 +79,7 @@ def generate_news_table(dataframe, max_rows=10):
                 style={"height": "150px", "overflowY": "scroll"},
             ),
             html.P(
-                "Last update : " + datetime.datetime.now().strftime("%H:%M:%S"),
+                id = "news_update",
                 style={"fontSize": "11", "marginTop": "4", "color": "#45df7e"},
             ),
         ],
@@ -88,10 +88,15 @@ def generate_news_table(dataframe, max_rows=10):
 
 # retrieve and displays news 
 def update_news():
-    r = requests.get('https://newsapi.org/v2/top-headlines?sources=bbc-news&apiKey=da8e2e705b914f9f86ed2e9692e66012')
-    json_data = r.json()["articles"]
-    df = pd.DataFrame(json_data)
-    df = pd.DataFrame(df[["title","url"]])
+    url = 'https://newsapi.org/v2/top-headlines?sources=bbc-news&apiKey=da8e2e705b914f9f86ed2e9692e66012'
+    try:
+        r = requests.get(url)
+        json_data = r.json()["articles"]
+        df = pd.DataFrame(json_data)
+        df = pd.DataFrame(df[["title", "url"]])
+    except Exception as e:
+        data = {"title": ["news api not retrievable"], "url": [url]}
+        df = pd.DataFrame(data=data, columns=["title", "url"])
     return generate_news_table(df)
 
 
@@ -972,7 +977,7 @@ app.layout = html.Div(
         # Interval component for graph updates
         dcc.Interval(id="i_tris", interval=1 * 5000, n_intervals=0),
         # Interval component for graph updates
-        dcc.Interval(id="i_news", interval=1 * 60000, n_intervals=0),
+        dcc.Interval(id="i_news", interval=24 * 60 * 60 * 1000, n_intervals=0),
 
 
         # left Div
@@ -999,7 +1004,7 @@ app.layout = html.Div(
                 ),
                 html.Div([
                     html.P('Headlines',style={"fontSize":"13","color":"#45df7e"}),
-                    html.Div(update_news(),id="news")
+                    html.Div(id="news")
                     ],
                     style={
                         "height":"33%",
@@ -1713,10 +1718,15 @@ def update_top_bar(orders):
 def update_time(n):
     return datetime.datetime.now().strftime("%H:%M:%S")
 
+
+@app.callback(Output("news_update", "children"), [Input("i_news", "n_intervals")])
+def update_news_timestamp(n):
+    return "Last update : " + datetime.datetime.now().strftime('%m/%d/%y %H:%M:%S')
+
+
 @app.callback(Output("news", "children"), [Input("i_news", "n_intervals")])
 def update_news_div(n):
     return update_news()
-
 
 if __name__ == "__main__":
     app.run_server(debug=True, threaded=True)
